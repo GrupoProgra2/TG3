@@ -91,7 +91,9 @@ public class Steam {
             games.skipBytes(5);
             double precio= games.readDouble();
             fl.write(players.readUTF()+" has bajado "+titulo+" a un precio de "+precio);
-            
+            fl.write("\n");
+            fl.close();
+            return true;
         }
                 
         return false;
