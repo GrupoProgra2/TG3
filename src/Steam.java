@@ -78,15 +78,19 @@ public class Steam {
          players.writeInt(0);
     }
     
-    public String downloadGameCode() throws IOException{
-        int code= this.getCode('D');
-        return "steam/downloads/download_"+code+".stm";
-    }
+   
     
     public boolean downloadGame(int cvg, int ccli, char SO) throws IOException {
         int edad= this.lookClient(ccli);
         if (this.lookGame(cvg, SO, edad)){
-            FileWriter fl=new FileWriter("steam/downloads/download_codedownload.stm");
+            int code= this.getCode('D');
+            FileWriter fl=new FileWriter("steam/downloads/download_"+code+".stm", true);
+            fl.write(Calendar.getInstance().getTime().toString());
+            fl.write("Download #"+code);
+            String titulo= games.readUTF();
+            games.skipBytes(5);
+            double precio= games.readDouble();
+            fl.write(players.readUTF()+" has bajado "+titulo+" a un precio de "+precio);
             
         }
                 
@@ -102,6 +106,7 @@ public class Steam {
                   players.readUTF();
                   t.setTimeInMillis(players.readLong());
                   int edad= year-t.get(Calendar.YEAR);
+                  players.seek(4);
                   return edad ;
           }
           return -1;
@@ -115,6 +120,7 @@ public class Steam {
               char s=games.readChar();
               int edad= games.readInt();
               if (c==code && c==SO && edad<=edadM){
+                  games.seek(4);
                   return true;
               }
           } return false;
