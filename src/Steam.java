@@ -1,7 +1,9 @@
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Calendar;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -41,4 +43,80 @@ public class Steam {
         }
     }
     
+     private int getCode(char t)throws IOException{
+         int code;
+         if ( t=='G'){         
+            codes.seek(0);
+         } else if (t=='U'){
+             codes.seek(4);
+         } else {
+             codes.seek(8);
+         }
+        code = codes.readInt();
+        codes.seek(codes.getFilePointer()-4);
+        codes.writeInt(code+1);
+        return code;
+    }
+     
+    public void addGame(String titulo, char SO, int edadMin, double precio) throws IOException{
+         games.seek( games.length());
+         int code= getCode('G');
+         games.writeInt(code);
+         games.writeUTF(titulo);
+         games.writeChar(SO);
+         games.writeInt(edadMin);
+         games.writeDouble(precio);
+         games.writeInt(0);
+    }
+    
+    public void addPlayer(String nombre,  Calendar nacimiento) throws IOException {
+        players.seek( players.length());
+         int code= getCode('U');
+         players.writeInt(code);
+         players.writeUTF(nombre);
+         players.writeLong(nacimiento.getTimeInMillis());
+         players.writeInt(0);
+    }
+    
+    public String downloadGameCode() throws IOException{
+        int code= this.getCode('D');
+        return "steam/downloads/download_"+code+".stm";
+    }
+    
+    public boolean downloadGame(int cvg, int ccli, char SO) throws IOException {
+        int edad= this.lookClient(ccli);
+        if (this.lookGame(cvg, SO, edad)){
+            FileWriter fl=new FileWriter("steam/downloads/download_codedownload.stm");
+            
+        }
+                
+        return false;
+    }
+    
+    public int lookClient(int code)throws IOException {
+        players.seek(0);
+        Calendar t= Calendar.getInstance();
+        int year= t.get(Calendar.YEAR);
+          while(players.getFilePointer() < players.length()){
+              if (players.readInt()==code)
+                  players.readUTF();
+                  t.setTimeInMillis(players.readLong());
+                  int edad= year-t.get(Calendar.YEAR);
+                  return edad ;
+          }
+          return -1;
+    }
+    
+     public boolean lookGame(int code, char SO, int edadM)throws IOException {
+         games.seek(0);
+          while(games.getFilePointer() < games.length()){
+              int c= games.readInt();
+              games.readUTF();
+              char s=games.readChar();
+              int edad= games.readInt();
+              if (c==code && c==SO && edad<=edadM){
+                  return true;
+              }
+          } return false;
+     }
 }
